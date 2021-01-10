@@ -142,4 +142,59 @@ public strictfp class RobotPlayer {
         } else return false;
     }
 
+// -----> Communication between the Enlightment Center (the main controller of robots) and the other friendly robots on the same team
+// this is for the robot to detect its surrounding location using pathfinding algorithm
+static void sendLocation() throws GameActionException {
+    MapLocation location = rc.getLocation();
+    int x = location.x, y = location.y;
+    int encodedlocation = (x % 128) * 128 + (y % 128); //using 128 instead of 64 for more precise and more accurate location 
+    if (rc.canSetFlag(encodedlocation)) {
+        rc.setFlag(encodedlocation);
+    }
+}
+
+
+static void sendLocation(int extraInformation) throws GameActionException {
+     MapLocation location = rc.getLocation();
+    int x = location.x, y = location.y;
+    int encodedlocation = (x % 128) * 128 + (y % 128) + extraInformation * 128 * 128; //This is used for the the extra 10 bits remaining for any extra information for the robot
+    if (rc.canSetFlag(encodedlocation)) {
+        rc.setFlag(encodedlocation);
+    }
+}
+
+static MapLocation getLocationFromFlag(int flag){
+        int y = flag % 128;
+        int x = (flag / 128) % 128;
+        int extraInformation = flag / 128 / 128;
+
+        MapLocation currentLocation =  rc.getLocation(); // to get the current location of our robot's position on the map
+        int offsetX128 = currentLocation.x / 128; 
+        int offsetY128 =  currentLocation.y / 128;
+        MapLocation actualLocation = new MapLocation(offsetX128 * 128 + x, offsetY128 * 128 + y);
+
+        MapLocation alternative = actualLocation.translate(-128, 0);
+        if (rc.getLocation().distanceSquaredTo(alternative) < rc.getLocation().distanceSquaredTo(actualLocation)){
+            actualLocation = alternative;
+        }
+
+        alternative = actualLocation.translate(128, 0);
+        if (rc.getLocation().distanceSquaredTo(alternative) < rc.getLocation().distanceSquaredTo(actualLocation)){
+            actualLocation = alternative;
+        }
+
+        alternative = actualLocation.translate(0, -128);
+        if (rc.getLocation().distanceSquaredTo(alternative) < rc.getLocation().distanceSquaredTo(actualLocation)){
+            actualLocation = alternative;
+        }
+
+        alternative = actualLocation.translate(0, 128);
+        if (rc.getLocation().distanceSquaredTo(alternative) < rc.getLocation().distanceSquaredTo(actualLocation)){
+            actualLocation = alternative;
+        }
+
+        return actualLocation;
+    }
+
+
 }
