@@ -196,5 +196,47 @@ static MapLocation getLocationFromFlag(int flag){
         return actualLocation;
     }
 
+// ------> Pathfinding logic
+        public static void run(){
+            while(true){
+                MapLocation target = getLocationFromFlag();
+                try{
+                    basicBug();
+                } catch (GameActionException e){
+                    //--------
+                }
+                Clock.yield(); // to end turn
+            }
+        }
+
+        static final double passabilityThreshold = 0.7; //This is to check if the square near the robot's current location has a minimum passability of 0.7 out of 1
+        static Direction bugDirection = null;
+
+        static void basicBug(MapLocation target) throws GameActionException{
+    
+                Direction d = rc.getLocation().directionTo(target);
+                if (rc.getLocation().equals(target)){
+                    // -----------------
+                } else if (rc.isReady()){
+                  if(rc.canMove(d) && rc.sensePassability(rc.getLocation().add(d)) >= passabilityThreshold){
+                      rc.move(d);
+                      bugDirection = null;
+                  } else {
+                      if (bugDirection == null){
+                          bugDirection = d.rotateRight();
+                      }
+                      for (int i = 0; i < 8; ++i) {
+                          if (rc.canMove(bugDirection) && rc.sensePassability(rc.getLocation().add(bugDirection)) >= passabilityThreshold){
+                              rc.move(bugDirection);
+                              break;
+                          }
+                          bugDirection = bugDirection.rotateRight(); //act as a right-handed basic bug
+                      }
+
+                      bugDirection = bugDirection.rotateLeft(); //act as a left-handed basic bug
+                  }
+              }
+        
+        }
 
 }
